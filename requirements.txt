@@ -1,0 +1,7 @@
+fastapi
+requests
+python-dotenv
+pyyaml
+chromadb
+ollama
+pypdf
