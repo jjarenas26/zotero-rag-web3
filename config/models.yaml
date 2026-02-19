@@ -1,0 +1,3 @@
+# models.yaml
+llm: llama3.1
+embedding: nomic-embed-text

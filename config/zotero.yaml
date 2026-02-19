@@ -1,0 +1,12 @@
+# zotero.yaml
+user_id: "17628687"
+api_key: "ZOTERO_API_KEY"
+
+library_type: "user"   # user | group
+group_id: null         # solo si usas group library
+
+collections:
+  - blockchain
+  - fintech
+
+download_pdfs: true
