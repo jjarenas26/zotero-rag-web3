@@ -1,0 +1,126 @@
+pilar,rank,titulo,seccion,regla_negocio,fortaleza_evidencia,final_score
+Technical Feasibility,1,Blockchain Technology and Cybersecurity in Fintech: Opportunities and Vulnerabilities,Recommendations,"**Technical Feasibility Business Rule**
+
+""IF a blockchain solution requires high transaction volumes and low latency THEN implement a sharding mechanism or utilize a high-throughput blockchain network BECAUSE public blockchains like Bitcoin have limited throughput (Odunaiya et al., 2024).""",1,0.2773
+Technical Feasibility,2,"Blockchain Integration In Business Finance: Enhancing Transparency, Efficiency, And Trust In Financial Ecosystems",Background,"Here is the business rule:
+
+""IF high transaction volumes and scalability are required for business operations THEN use permissioned blockchains with layer-two protocols or sharding BECAUSE they have shown noteworthy transaction speeds and scalability solutions.""",1,0.2773
+Technical Feasibility,3,"A Review of Blockchain Platforms Based on the Scalability, Security and Decentralization Trilemma:",Introduction,"**Technical Feasibility Rule**
+
+IF the business requires high transactional throughput and low latency THEN adopt a blockchain with scalable architecture (e.g., sharding or layer 2 scaling solutions) BECAUSE research shows that high scalability is crucial for user adoption, supporting Croman et al.'s findings on maximum throughput and latency.",3,0.2749
+Technical Feasibility,4,A Review of Blockchain Approaches for KYC,Results,"Here is the business rule:
+
+""IF system lacks transparent and tamper-proof data management for medical health applications THEN implement Smart Contract with immutability and transparency features BECAUSE absence of these features hampers data security and authenticity [29].""",3,0.2551
+Technical Feasibility,5,A Review of Blockchain Approaches for KYC,Results,"Here is the Business Rule:
+
+""IF an existing system lacks numeric metrics for transaction throughput and block creation time, THEN conduct a thorough analysis of consensus algorithms to ensure efficient validation AND data storage efficiency, BECAUSE [26].""
+
+This rule is designed to ensure that technical feasibility assessments are conducted thoroughly, taking into account the limitations of the existing system.",3,0.2549
+Technical Feasibility,6,A Review of Blockchain Approaches for KYC,Results,"Here's a business rule for technical feasibility:
+
+""IF multimedia transaction volume exceeds 100 transactions per second THEN deploy sharding consensus algorithm BECAUSE high throughput is crucial for preventing data access and retrieval delays.""",3,0.2549
+Technical Feasibility,7,A Blockchain Self-Sovereign Identity for Open Banking Secured by the Customer’s Banking Cards,Discussion,"Here is the business rule:
+
+""IF customer convenience time exceeds 15 seconds per transaction at peak load THEN implement Proof of Authority (PoA) consensus mechanism BECAUSE PoA provides faster transaction rates compared to Proof of Work and eliminates malicious behavior.""",1,0.2549
+Technical Feasibility,8,The current research status of solving blockchain scalability issue,Introduction,"Here is the business rule:
+
+""IF high transaction volume is anticipated THEN implement a private blockchain solution with sharding and off-chain transactions BECAUSE scalability issues can be mitigated as per Ethereum's own research on congestion relief.""",1,0.2549
+Technical Feasibility,9,The current research status of solving blockchain scalability issue,Introduction,"Here is a strategic business rule for a feasibility framework regarding Technical Feasibility:
+
+**Rule:** IF large-scale transactions are anticipated on the blockchain network THEN consider implementing sharding and off-chain processing BECAUSE high transaction throughput can be achieved by distributing computational tasks (Nakamoto, 2008; [1]).",1,0.2549
+Technical Feasibility,10,A Review of Blockchain Approaches for KYC,Methodology,"Here is the strategic business rule:
+
+""IF transaction volume exceeds 10,000 per minute THEN implement faster block creation and improved consensus algorithm BECAUSE reduced latency enables quicker KYC authentication and system responsiveness.""",1,0.2548
+Governance & Privacy,1,"Data Integrity in Decentralized Financial Systems: A Model for Auditable, Automated Reconciliation Using Blockchain and AI",Background,"Here is a strategic business rule:
+
+**Governance and Privacy Feasibility Framework**
+
+IF sensitive financial data requires high confidentiality and compliance regulations are stringent THEN implement off-chain data storage with secure access controls BECAUSE on-chain data immutability may not guarantee compliance with regulatory requirements (Igba, et al., 2024).",3,0.2977
+Governance & Privacy,2,"Data Integrity in Decentralized Financial Systems: A Model for Auditable, Automated Reconciliation Using Blockchain and AI",Background,"Here is the business rule:
+
+""IF governance and privacy are critical for decision-making THEN integrate NLP and off-chain storage with blockchain BECAUSE immutability, transparency, and consensus ensure data integrity (Ogbuonyalu et al., 2024; Yli-Huumo et al., 2016).""",1,0.2779
+Governance & Privacy,3,"Blockchain for Quality: Advancing Security, Efficiency, and Transparency in Financial Systems",Literature Review,"Here is a strategic business rule for a feasibility framework regarding Governance & Privacy:
+
+""IF sensitive financial data requires secure storage and sharing among multiple stakeholders THEN implement permissioned blockchain (Hyperledger Fabric) BECAUSE [22-24] enhanced privacy controls ensure regulatory compliance.""",1,0.2776
+Governance & Privacy,4,"Data Integrity in Decentralized Financial Systems: A Model for Auditable, Automated Reconciliation Using Blockchain and AI",Recommendations,"Here is the strategic business rule:
+
+""IF sensitive user data is involved in DeFi transactions THEN utilize federated learning and homomorphic encryption for decentralized model training BECAUSE blockchain systems prioritize immutable and verifiable nature.""",1,0.2776
+Governance & Privacy,5,Blockchain and decentralized finance (DEFI): Disrupting traditional banking and financial systems,Introduction,"**Business Rule:** IF sensitive data must be shared internally with restricted access THEN use a Private Blockchain (e.g., Hyperledger) BECAUSE it offers controlled access and faster transaction speeds while maintaining security and confidentiality.",3,0.2754
+Governance & Privacy,6,Navigating Blockchain’s Twin Challenges: Scalability and Regulatory Compliance,Results,"Here is a strategic business rule for a feasibility framework regarding Governance & Privacy:
+
+""IF data sharing requires jurisdictional compliance AND privacy concerns are high THEN implement permissioned ledgers with private-key management BECAUSE regulatory adaptations for blockchain in genomic research support enhanced privacy protections [47, 48].""",3,0.2552
+Governance & Privacy,7,A Review of Blockchain Approaches for KYC,Results,"Here is the business rule:
+
+""IF data storage and retrieval processes impact real-time capabilities, THEN implement efficient blockchain-based data storage solutions due to reduced latency and increased scalability. BECAUSE inefficient data storage compromises system performance and user trust.""",3,0.2552
+Governance & Privacy,8,"Blockchain Financial Statements: Innovating Financial Reporting, Accounting, and Liquidity Management",Background,"Here is the business rule:
+
+**IF** transactions involve sensitive information and confidentiality is a priority, **THEN** consider a permissioned blockchain (Corda) BECAUSE it ensures private transactions and maintains transactional data confidentiality between verified parties.",1,0.2552
+Governance & Privacy,9,Blockchain-Based KYC Model for Credit Allocation in Banking,Background,"Here is the business rule:
+
+""IF sensitive data is stored on a public blockchain network THEN implement a private blockchain network with Proof of Stake consensus mechanism BECAUSE it minimizes Sybil attack risks.""",1,0.2552
+Governance & Privacy,10,Navigating Blockchain’s Twin Challenges: Scalability and Regulatory Compliance,Results,"Here's a strategic business rule for a feasibility framework regarding Governance & Privacy:
+
+""IF IoT applications process personal data, THEN deploy mutable blockchain architecture with enhanced data privacy features BECAUSE [9].""
+
+This business rule is based on the scientific finding that mutable blockchain architectures can enhance data privacy while preserving blockchain's core features.",3,0.2552
+Economic Viability,1,Modernizing Legacy Systems: A Scalable Approach to Next-Generation Data Architectures and Seamless Integration,Discussion,"Here's a Business Rule for the feasibility framework:
+
+""IF a legacy system experiences high maintenance costs and slow software development cycles THEN migrate to a blockchain-based architecture BECAUSE outdated systems accumulate technical debt and hinder scalability (Oyegbade et al., 2023).""",1,0.2545
+Economic Viability,2,Modernizing Legacy Systems: A Scalable Approach to Next-Generation Data Architectures and Seamless Integration,Recommendations,"Here is the business rule:
+
+""IF legacy system modernization involves high upfront costs AND a large-scale migration risk THEN adopt a hybrid cloud strategy with incremental transitions to ensure economic viability BECAUSE scalability and adaptability are key to future-proofing investments.""",1,0.2545
+Economic Viability,3,Modernizing Legacy Systems: A Scalable Approach to Next-Generation Data Architectures and Seamless Integration,Discussion,"Here is the business rule:
+
+""IF Legacy system maintenance costs exceed 20% of IT budget AND regulatory compliance requirements are not met THEN Implement a cloud-based modernization plan BECAUSE Inefficient legacy systems hinder business agility and pose data security risks (Adepoju et al., 2022; Sharma & Barua, 2023).""",1,0.2544
+Economic Viability,4,Framework for Migrating Legacy Systems to Next-Generation Data Architectures While Ensuring Seamless Integration and Scalability,Conclusion,"**Business Rule: Economic Viability**
+
+IF The legacy system's maintenance costs exceed its revenue-generating potential AND The migration process can be phased and iterative
+THEN Implement a blockchain-based solution to modernize the IT infrastructure BECAUSE It improves scalability and performance, reducing operational expenses.",3,0.2544
+Economic Viability,5,Framework for Migrating Legacy Systems to Next-Generation Data Architectures While Ensuring Seamless Integration and Scalability,Conclusion,"Here is the business rule:
+
+""IF Legacy system migration cost exceeds 20% of annual operating budget THEN Use blockchain-based migration tools to minimize downtime and costs BECAUSE (Chukwurah et al., 2024; Ofoegbu et al., 2024)""",3,0.2544
+Economic Viability,6,Modernizing Legacy Systems: A Scalable Approach to Next-Generation Data Architectures and Seamless Integration,Conclusion,"Here is a strategic business rule for a feasibility framework regarding Economic Viability:
+
+""IF Legacy system maintenance costs exceed 20% of IT budget THEN Migrate to cloud-native architecture BECAUSE Outdated infrastructure leads to higher maintenance costs and limited scalability.""",3,0.2544
+Economic Viability,7,Modernizing Legacy Systems: A Scalable Approach to Next-Generation Data Architectures and Seamless Integration,Abstract,"Here is the business rule:
+
+""IF modernization of legacy systems requires significant upfront investment THEN consider blockchain-based implementation to reduce long-term costs and increase operational efficiency BECAUSE scalable data architectures can lead to substantial cost savings.""",1,0.2544
+Economic Viability,8,Framework for Migrating Legacy Systems to Next-Generation Data Architectures While Ensuring Seamless Integration and Scalability,Abstract,"Here is a strategic business rule for the feasibility framework:
+
+IF Legacy system upgrade exceeds 50% of annual IT budget THEN Implement blockchain-based modernization approach BECAUSE Migrating to next-generation data architectures enhances operational efficiency and scalability (Scientific Evidence: [insert reference]).",1,0.2543
+Economic Viability,9,Modernizing Legacy Systems: A Scalable Approach to Next-Generation Data Architectures and Seamless Integration,Discussion,"""IF the total cost of ownership associated with maintaining outdated technologies exceeds 20% of annual budget THEN migrate to cloud-native solutions BECAUSE high operational costs hinder innovation and competitiveness (Ike et al., 2023).""",1,0.2543
+Economic Viability,10,Framework for Migrating Legacy Systems to Next-Generation Data Architectures While Ensuring Seamless Integration and Scalability,Conclusion,"Here's a business rule for the feasibility framework:
+
+""IF legacy system dependencies exceed 50% of total dependencies THEN migrate to a microservices architecture with blockchain-based integration BECAUSE inefficient interoperability (Gade, 2022) hinders modernization.""",3,0.2542
+Strategic Alignment,1,"Data Integrity in Decentralized Financial Systems: A Model for Auditable, Automated Reconciliation Using Blockchain and AI",Background,"Here is a strategic business rule for a feasibility framework:
+
+**Rule:** IF decentralized financial operations rely heavily on unstructured data THEN integrate Natural Language Processing (NLP) to enhance data integrity BECAUSE NLP enables semantic auditing and compliance verification (Ononiwu et al., 2023).",1,0.2769
+Strategic Alignment,2,"Data Integrity in Decentralized Financial Systems: A Model for Auditable, Automated Reconciliation Using Blockchain and AI",Recommendations,"Here is the strategic business rule:
+
+""IF DeFi operations lack transparency and accountability THEN integrate blockchain with AI for auditable reports BECAUSE explainable AI models are essential for decentralized systems to ensure trust minimization.""",1,0.2769
+Strategic Alignment,3,"Blockchain Financial Statements: Innovating Financial Reporting, Accounting, and Liquidity Management",Methodology,"""IF the BFS system's architecture is not aligned with the organization's communication structure, THEN refactor components to mirror organizational design, BECAUSE Conway’s Law (1967) emphasizes that organizational constraints impact system design.""",3,0.2743
+Strategic Alignment,4,"Cross-platform financial data unification to strengthen compliance, fraud detection and risk controls",Introduction,"Here is the business rule:
+
+""IF financial institutions embed AI models in their data infrastructures THEN implement explainable AI (XAI) tools and unified platforms with audit trails BECAUSE [33,34].""",1,0.2546
+Strategic Alignment,5,Modernizing Legacy Systems: A Scalable Approach to Next-Generation Data Architectures and Seamless Integration,Discussion,"Here's a business rule for the feasibility framework:
+
+""IF strategic objectives require incremental modernization; THEN adopt phased transition models (gradual migration) due to reduced risks and operational continuity (Gade, 2021).""
+
+This business rule aligns with the scientific finding that gradual migration is effective for enterprises with complex regulatory and compliance requirements.",1,0.2544
+Strategic Alignment,6,The link between sustainable business models and Blockchain: A multiple case study approach,Introduction,"Here is the business rule:
+
+""IF an organization's primary activities are significantly impacted by external events forcing a shift to sustainable practices
+THEN integrate blockchain technology for real-time tracking and verification of environmental and social benefits
+BECAUSE incorporating triple bottom line approaches can create new sustainable markets (Bocken et al., 2014; WBCSD, 2022).""",1,0.2544
+Strategic Alignment,7,"Blockchain Financial Statements: Innovating Financial Reporting, Accounting, and Liquidity Management",Methodology,"Here is the strategic business rule:
+
+""IF the BFS system's financial accounting domain model requires frequent updates of transactional interactions THEN utilize a blockchain-based data storage and retrieval mechanism BECAUSE it ensures verifiable, on-demand validation of financial health based on past transactions.""",1,0.2544
+Strategic Alignment,8,The Impact of Blockchain Technology on Audit Process Quality: An Empirical Study on the Banking Sector,Results,"Here is the strategic business rule:
+
+""IF an audit firm has existing sectoral experience and a network of clients THEN develop new consulting services on Blockchain best practices AND act as a planner and coordinator for potential participants BECAUSE leveraging expertise can enhance internal control and risk management systems (Elommal & Manita, 2022).""",3,0.2544
+Strategic Alignment,9,Accelerating Analytics Maturity in Startups: A Case Study in Modern Data,Recommendations,"Here is the business rule:
+
+""IF Nigerian fintechs aim to reduce regulatory constraints THEN implement well-architected systems for compliance logic codification BECAUSE regulatory alignment can become a competitive enabler.""",1,0.2544
+Strategic Alignment,10,Building a Blockchain-Based Platform for Interbank Collaboration,Background,"Here is the strategic business rule:
+
+""IF an interbank reconciliation process has low standardization and slow operating procedures THEN adopt a private permissioned blockchain (such as Corda Enterprise) BECAUSE evidence shows it can increase transparency, reduce operational risk and improve audit activities [7, 57].""",1,0.2544

@@ -137,7 +137,57 @@ class HybridRetriever:
         ranked = sorted(results, key=lambda x: x["final_score"], reverse=True)
         return ranked[:top_k]
 
-        
+    def search2(self, query_text: str, n_results: int = 10, where_filter: dict = None):
+        """
+        Versión mejorada del buscador que aplica los bonos de estructura 
+        y taxonomía definidos en el Chunker.
+        """
+        query_embedding = self.embedder.embed_text(query_text)
+
+        raw_results = self.vector_store.query(
+            query_embedding=query_embedding,
+            n_results=n_results * 2, # Buscamos más para luego re-rankear
+            where_filter=where_filter
+        )
+
+        documents = raw_results["documents"][0]
+        metadatas = raw_results["metadatas"][0]
+        distances = raw_results["distances"][0]
+
+        ranked_results = []
+
+        for doc, metadata, distance in zip(documents, metadatas, distances):
+            # 1. Score Semántico (0-1)
+            semantic_score = 1 / (1 + distance)
+            
+            # 2. Score de Estructura (Bonos por tablas y taxonomías)
+            struct_score = 0.5 # base
+            if metadata.get("has_taxonomy_pattern"):
+                struct_score += self.taxonomy_bonus_weight
+            if metadata.get("has_structured_table"):
+                struct_score += self.table_bonus_weight
+            
+            # 3. Score de Recencia
+            year = metadata.get("year")
+            recency_score = self._compute_recency_score(year) if year else 0.5
+
+            # Cálculo Final usando los pesos de la clase
+            final_score = (
+                self.semantic_weight * semantic_score +
+                self.structural_weight * struct_score +
+                self.recency_weight * recency_score
+            )
+
+            ranked_results.append({
+                "text": doc,
+                "metadata": metadata,
+                "final_score": final_score,
+                "semantic_score": semantic_score
+            })
+
+        # Ordenar y devolver TOP K
+        ranked_results.sort(key=lambda x: x["final_score"], reverse=True)
+        return ranked_results[:n_results]   
 
     def query(
         self,

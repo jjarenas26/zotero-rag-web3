@@ -1,0 +1,52 @@
+{
+  "pillars": [
+    {
+      "pillar": "Technical",
+      "question_es": "¿La aplicación requiere alta transparencia y autenticidad de datos?",
+      "weight": 8,
+      "is_critical": true
+    },
+    {
+      "pillar": "Governance",
+      "question_es": "¿La organización tiene experiencia previa en regulaciones relacionadas con la privacidad y confidencialidad?",
+      "weight": 5,
+      "is_critical": false
+    },
+    {
+      "pillar": "Economic",
+      "question_es": "¿El costo de mantenimiento del legado es mayor al 20% del presupuesto IT?",
+      "weight": 6,
+      "is_critical": true
+    },
+    {
+      "pillar": "Strategic",
+      "question_es": "¿La empresa necesita incrementar la transparencia y reducir riesgos en sus operaciones de DeFi?",
+      "weight": 9,
+      "is_critical": true
+    },
+    {
+      "pillar": "Technical",
+      "question_es": "¿Se espera una alta cantidad de transacciones por segundo?",
+      "weight": 7,
+      "is_critical": true
+    },
+    {
+      "pillar": "Governance",
+      "question_es": "¿La aplicación requiere acceso controlado y seguridad alta?",
+      "weight": 4,
+      "is_critical": false
+    },
+    {
+      "pillar": "Economic",
+      "question_es": "¿El costo de modernización del legado supera los costos de implementación de blockchain?",
+      "weight": 3,
+      "is_critical": true
+    },
+    {
+      "pillar": "Strategic",
+      "question_es": "¿La empresa necesita reflejar la estructura organizativa en su arquitectura?",
+      "weight": 10,
+      "is_critical": true
+    }
+  ]
+}
