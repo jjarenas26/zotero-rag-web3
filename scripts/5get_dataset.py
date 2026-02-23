@@ -1,116 +1,117 @@
 import csv
-import re
+import requests
+import json
+import sys
+import os
+
+# 1. PATH SETUP
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 from retrieval.hybrid_retriever import HybridRetriever
 from embedding.ollama_embedder import OllamaEmbedder
 from vectorstore.chroma_vector_store import ChromaVectorStore
 
-# ==============================
-# CONFIGURACIÓN
-# ==============================
-DIMENSIONS = [
-    "Vision general",
-    "Case study",
-    "Interoperability",
-    "Performance efficiency",
-    "Availability",
-    "Scalability",
-    "Maintainability",
-    "Security"
-]
+# CONFIGURATION
+TOP_K = 10
+OUTPUT_CSV = "blockchain_business_framework.csv"
+OLLAMA_MODEL = "llama3.1"
 
-TOP_K = 20
-OUTPUT_CSV = "literature_review_framework.csv"
+# Fixed Pillars based on Technology Adoption Framework (TOE)
+ADOPTION_PILLARS = {
+    "Technical": "Focus on scalability, security, interoperability, and technical complexity.",
+    "Organizational": "Focus on cost, ROI, top management support, and internal resources.",
+    "Environmental/Strategic": "Focus on market pressure, industry standards, and competitive advantage.",
+    "Governance/Legal": "Focus on regulatory compliance, legal frameworks, and consensus policies."
+}
 
-# ==============================
-# INICIALIZAR RETRIEVER
-# ==============================
-embedder = OllamaEmbedder()
+# Initialize Components
+embedder = OllamaEmbedder(model="nomic-embed-text")
 vector_store = ChromaVectorStore()
 retriever = HybridRetriever(embedder, vector_store)
 
-# ==============================
-# FUNCIONES AUXILIARES
-# ==============================
-def normalize_text(text: str) -> str:
-    return text.replace("\n", " ").replace(",", " ").strip()
+def generate_optimized_queries(pillar_name, description):
+    """
+    Uses the library context to generate the best technical queries 
+    for each fixed adoption pillar.
+    """
+    print(f"🧠 Generating optimized research queries for: {pillar_name}...")
+    
+    # Get a small sample of the library to understand the terminology used by the authors
+    sample = retriever.search2(query_text=f"Blockchain {pillar_name} {description}", n_results=5)
+    context = "\n".join([d['text'][:500] for d in sample])
+    
+    prompt = f"""
+    [INST] 
+    As a Research Expert, your goal is to extract the best search terms for the '{pillar_name}' pillar.
+    PILLAR DESCRIPTION: {description}
+    LIBRARY CONTEXT: {context}
+    
+    TASK: Based on the terminology found in the library, generate a single, highly technical 
+    search query (in English) to find the most relevant scientific evidence for this pillar.
+    
+    OUTPUT: Return ONLY the string of the query. No preamble.
+    [/INST]
+    """
+    
+    try:
+        response = requests.post("http://localhost:11434/api/generate", 
+                                 json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False})
+        return response.json().get("response", "").strip().strip('"')
+    except:
+        return f"Blockchain {pillar_name} adoption factors"
 
-def extract_metrics(snippet: str) -> list:
+def generate_business_rule(pillar, snippet):
+    """Generates a strategic rule based on scientific evidence."""
+    prompt = f"""
+    [INST] 
+    ROLE: Senior Blockchain Consultant.
+    CONTEXT: "{snippet}"
+    TASK: Create a strategic BUSINESS RULE for a feasibility framework regarding the '{pillar}' dimension.
+    FORMAT: "IF [business condition] THEN [blockchain recommendation] BECAUSE [scientific evidence]"
+    CONSTRAINT: Professional tone, max 30 words, answer in English.
+    [/INST]
     """
-    Detecta métricas mencionadas en el snippet.
-    """
-    snippet = snippet.lower()
-    metrics_patterns = [
-        "throughput", "latency", "transactions per second", "tps",
-        "uptime", "availability", "scalability", "response time",
-        "maintainability", "security", "integrity", "consistency",
-        "accuracy", "precision", "recall", "f1-score"
-    ]
-    found = [m for m in metrics_patterns if m in snippet]
-    return found
-
-def estimate_evidence_strength(snippet: str) -> str:
-    """
-    Heurística simple:
-    - strong: cifras, tablas, resultados concretos
-    - medium: descripciones metodológicas
-    - weak: solo discusión teórica
-    """
-    snippet_lower = snippet.lower()
-    if re.search(r"\d+(\.\d+)?\s*(%|ms|s|tps|transactions|hours|days)", snippet_lower):
-        return "strong"
-    elif any(word in snippet_lower for word in ["experiment", "evaluation", "study", "methodology", "results"]):
-        return "medium"
-    else:
-        return "weak"
+    try:
+        res = requests.post("http://localhost:11434/api/generate", 
+                            json={"model": OLLAMA_MODEL, "prompt": prompt, "stream": False})
+        return res.json().get("response", "").strip()
+    except:
+        return "Generation Error"
 
 # ==============================
-# RECUPERACIÓN Y EXPORTACIÓN
+# MAIN EXECUTION
 # ==============================
+
 all_rows = []
 
-for dimension in DIMENSIONS:
-    print(f"\n🔹 Procesando dimensión: {dimension}")
+for pillar, description in ADOPTION_PILLARS.items():
+    # Phase 1: Dynamic Query Generation
+    optimized_query = generate_optimized_queries(pillar, description)
+    print(f"✅ Optimized Query: {optimized_query}")
+    
+    # Phase 2: Evidence Retrieval
+    print(f"🔍 Investigating: {pillar}...")
+    results = retriever.search2(query_text=optimized_query, n_results=TOP_K)
 
-    results = retriever.query(query_text=dimension, n_results=TOP_K)
-
-    for rank, result in enumerate(results, start=1):
-        metadata = result.get("metadata", {})
-        snippet = normalize_text(result.get("text", ""))
-
-        metrics = extract_metrics(snippet)
-        evidence = estimate_evidence_strength(snippet)
-
-        row = {
-            "dimension": dimension,
+    for rank, result in enumerate(results, 1):
+        metadata = result["metadata"]
+        text_content = result["text"].replace("\n", " ").strip()
+        
+        print(f"   -> Generating business rule for evidence #{rank}...")
+        biz_rule = generate_business_rule(pillar, text_content)
+        
+        all_rows.append({
+            "pilar": pillar,
             "rank": rank,
-            "doc_id": metadata.get("doc_id", ""),
-            "title": metadata.get("title", ""),
-            "year": metadata.get("year", 0),
-            "section": metadata.get("section", ""),
-            "snippet": snippet,
-            "metrics": "; ".join(metrics) if metrics else "",
-            "evidence_strength": evidence,
-            "semantic_score": round(result.get("semantic_score", 0), 4),
-            "structural_score": round(result.get("structural_weight", 0), 4),
-            "recency_score": round(result.get("recency_weight", 0), 4),
-            "diversity_score": round(result.get("diversity_score", 0), 4),
-            "final_score": round(result.get("final_score", 0), 4)
-        }
+            "titulo": metadata.get("title", "N/A"),
+            "regla_negocio": biz_rule,
+            "fortaleza_evidencia": 3 if metadata.get("section") in ["Results", "Findings", "Conclusion"] else 1
+        })
 
-        all_rows.append(row)
-
-# ==============================
-# GUARDAR CSV
-# ==============================
-fieldnames = [
-    "dimension", "rank", "doc_id", "title", "year", "section", "snippet",
-    "metrics", "evidence_strength",
-    "semantic_score", "structural_score", "recency_score", "diversity_score", "final_score"
-]
-
+# Save to CSV
 with open(OUTPUT_CSV, "w", encoding="utf-8", newline="") as f:
-    writer = csv.DictWriter(f, fieldnames=fieldnames)
+    writer = csv.DictWriter(f, fieldnames=["pilar", "rank", "titulo", "regla_negocio", "fortaleza_evidencia"])
     writer.writeheader()
     writer.writerows(all_rows)
 
-print(f"\n✅ CSV generado con {len(all_rows)} filas: {OUTPUT_CSV}")
+print(f"\n✅ Framework processed with optimized queries! File: {OUTPUT_CSV}")

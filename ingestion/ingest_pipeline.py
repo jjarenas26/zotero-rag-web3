@@ -3,7 +3,7 @@ import os
 
 from ingestion.pdf_loader import extract_text
 from ingestion.section_splitter import SectionSplitter
-from ingestion.chunker import AcademicChunker
+from ingestion.academic_chunker import AcademicChunker
 
 
 class IngestPipeline:

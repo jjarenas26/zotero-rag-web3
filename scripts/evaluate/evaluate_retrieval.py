@@ -1,4 +1,4 @@
-from retrieval.hybrid_retriever import HybridRetriever
+from retrieval.backup.hybrid_retriever import HybridRetriever
 from embedding.ollama_embedder import OllamaEmbedder
 from vectorstore.chroma_vector_store import ChromaVectorStore
 

@@ -2,10 +2,14 @@ import os
 import json
 from typing import List, Dict
 
+import re
+import unicodedata
+
 from ingestion.section_splitter import SectionSplitter
 from ingestion.academic_chunker import AcademicChunker
 from embedding.ollama_embedder import OllamaEmbedder
 from vectorstore.chroma_vector_store import ChromaVectorStore
+from ingestion.pdf_loader import extract_clean_text
 
 from pypdf import PdfReader
 
@@ -32,41 +36,57 @@ class AcademicIngestionPipeline:
     # ============================================================
     # PUBLIC METHODS
     # ============================================================
-
     def ingest_paper(self, pdf_path: str, metadata_path: str):
-        """
-        Ingesta completa de un paper individual.
-        """
+        print(f"🧐 Ingesting: {os.path.basename(pdf_path)}")
+        
+        try:
+            # 1. Carga y preparación de Metadata
+            metadata = self._load_metadata(metadata_path)
+            metadata = self._prepare_metadata(metadata)
 
-        metadata = self._load_metadata(metadata_path)
-        metadata = self._prepare_metadata(metadata)
+            # 2. Extracción y Limpieza Profunda
+            raw_text = extract_clean_text(pdf_path)
+            
+            #clean_text = self._clean_academic_text(raw_text) # ✨ Limpieza de encoding/garbage
+            #print(clean_text[:3000])
+            # 3. Segmentación Estructural (SectionSplitter optimizado)
+            
+            sections = self.section_splitter.split(raw_text)
+            #print(len(sections))
+            
+            # 4. Chunking con Smart Overlap (AcademicChunker optimizado)
+            chunks = self.chunker.chunk_sections(sections, metadata)
 
-        raw_text = self._extract_pdf_text(pdf_path)
+            if not chunks:
+                print(f"⚠️ No chunks generated for {pdf_path}")
+                return
 
-        sections = self.section_splitter.split(raw_text)
-        chunks = self.chunker.chunk_sections(sections, metadata)
+            texts = []
+            metadatas = []
+            vector_ids = []
 
-        if not chunks:
-            print(f"No chunks generated for {pdf_path}")
-            return
+            for i, chunk in enumerate(chunks):
+                texts.append(chunk["text"])
+                metadatas.append(self._build_vector_metadata(chunk))
+                # IDs deterministas para evitar duplicados al re-ingestar
+                vector_ids.append(f"{metadata['doc_id']}_ch{i}")
 
-        texts = []
-        metadatas = []
+            # 5. Generación de Embeddings
+            embeddings = self.embedder.embed_batch(texts)
 
-        for chunk in chunks:
-            texts.append(chunk["text"])
-            metadatas.append(self._build_vector_metadata(chunk))
+            # 6. Almacenamiento en ChromaDB
+            self.vector_store.add_documents(
+                ids=vector_ids,
+                texts=texts,
+                embeddings=embeddings,
+                metadatas=metadatas
+            )
 
-        embeddings = self.embedder.embed_batch(texts)
-
-        self.vector_store.add_documents(
-            texts=texts,
-            embeddings=embeddings,
-            metadatas=metadatas
-        )
-
-        print(f"Ingested {len(chunks)} chunks from {metadata.get('doc_id')}")
-
+            print(f"✅ Ingested {len(chunks)} chunks from {metadata.get('doc_id')}")
+            
+        except Exception as e:
+            print(f"❌ Error ingesting {pdf_path}: {str(e)}")
+    
     def ingest_collection(self, folder_path: str):
         """
         Ingesta automática de una carpeta con PDFs y JSONs emparejados.
@@ -138,16 +158,6 @@ class AcademicIngestionPipeline:
 
         return metadata
 
-    def _extract_pdf_text(self, pdf_path: str) -> str:
-        reader = PdfReader(pdf_path)
-        text = ""
-
-        for page in reader.pages:
-            text += page.extract_text() or ""
-            text += "\n"
-
-        return text
-
     def _build_vector_metadata(self, chunk: Dict) -> Dict:
         """
         Construye metadata limpia para Chroma.
@@ -180,6 +190,29 @@ class AcademicIngestionPipeline:
                 metadata[k] = "" if k != "year" else 0
 
         return metadata
+
+    def _clean_academic_text(self, text: str) -> str:
+        """
+        Limpieza profunda para textos extraídos de PDFs académicos.
+        """
+        # 1. Normalización Unicode (Arregla ligaduras y caracteres extraños)
+        text = unicodedata.normalize("NFKC", text)
+
+        # 2. Unir palabras cortadas por saltos de línea (hyphenation)
+        # Ejemplo: "block-\nchain" -> "blockchain"
+        text = re.sub(r"(\w+)-\n\s*(\w+)", r"\1\2", text)
+
+        # 3. Eliminar saltos de línea internos pero preservar párrafos
+        # Reemplazamos un solo salto de línea por espacio
+        text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
+
+        # 4. Eliminar ruido común de PDFs (caracteres no imprimibles)
+        text = "".join(ch for ch in text if unicodedata.category(ch)[0] != "C")
+
+        # 5. Colapsar espacios múltiples
+        text = re.sub(r"\s+", " ", text)
+
+        return text.strip()
 
     # ============================================================
     # STRUCTURAL BOOST BASE

@@ -1,6 +1,6 @@
 import chromadb
 from chromadb.config import Settings
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import uuid
 import logging
 
@@ -34,41 +34,42 @@ class ChromaVectorStore:
         )
 
     # ==========================================
-    # INSERT DOCUMENTS
+    # INSERT / UPDATE DOCUMENTS
     # ==========================================
 
     def add_documents(
         self,
         texts: List[str],
         embeddings: List[List[float]],
-        metadatas: List[Dict[str, Any]]
+        metadatas: List[Dict[str, Any]],
+        ids: Optional[List[str]] = None  # ✨ Ahora acepta IDs externos
     ):
         """
-        Inserta documentos con embeddings y metadata rica.
+        Inserta o actualiza documentos con embeddings y metadata rica.
         """
 
         if not (len(texts) == len(embeddings) == len(metadatas)):
             raise ValueError("texts, embeddings y metadatas deben tener el mismo tamaño")
 
-        ids = [str(uuid.uuid4()) for _ in texts]
+        # ✨ Si no se pasan IDs, generamos UUIDs. Si se pasan, los usamos.
+        final_ids = ids if ids is not None else [str(uuid.uuid4()) for _ in texts]
+
+        # Validación de tipos de metadata para evitar errores en Chroma
         for i, m in enumerate(metadatas):
             for k, v in m.items():
-                if not isinstance(v, (str, int, float, bool)):
-                    print("❌ INVALID METADATA")
-                    print("Chunk index:", i)
-                    print("Key:", k)
-                    print("Type:", type(v))
-                    print("Value:", v)
-                    raise ValueError("Invalid metadata detected")
+                if not isinstance(v, (str, int, float, bool)) and v is not None:
+                    self.logger.error(f"❌ INVALID METADATA at index {i} | Key: {k} | Type: {type(v)}")
+                    raise ValueError(f"ChromaDB only supports str, int, float, bool. Got {type(v)} for key '{k}'")
 
-        self.collection.add(
+        # ✨ Usamos UPSERT en lugar de ADD para permitir actualizaciones por ID
+        self.collection.upsert(
             documents=texts,
             embeddings=embeddings,
             metadatas=metadatas,
-            ids=ids
+            ids=final_ids
         )
 
-        self.logger.info(f"Inserted {len(texts)} documents into ChromaDB")
+        self.logger.info(f"Successfully upserted {len(texts)} documents into '{self.collection_name}'")
 
     # ==========================================
     # QUERY
@@ -83,26 +84,16 @@ class ChromaVectorStore:
         """
         Query semántico con filtros estructurales opcionales.
         """
-
         results = self.collection.query(
             query_embeddings=[query_embedding],
             n_results=n_results,
             where=where_filter
         )
-
         return results
-
-    # ==========================================
-    # COUNT
-    # ==========================================
 
     def count(self) -> int:
         return self.collection.count()
 
-    # ==========================================
-    # DELETE COLLECTION
-    # ==========================================
-
     def delete_collection(self):
         self.client.delete_collection(self.collection_name)
-        self.logger.info("Collection deleted")
+        self.logger.info(f"Collection '{self.collection_name}' deleted")

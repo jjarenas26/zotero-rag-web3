@@ -1,21 +1,24 @@
 import numpy as np
 from datetime import datetime
 from typing import List, Dict, Any
-import math
-
 
 class HybridRetriever:
+    """
+    Motor de búsqueda híbrida que combina:
+    1. Similitud Semántica (Vectores)
+    2. Importancia Estructural (Secciones de los papers)
+    3. Recencia (Actualidad de la investigación)
+    4. Diversidad (Evitar sesgo de un solo autor)
+    """
 
     def __init__(
         self,
         embedder,
         vector_store,
-        semantic_weight: float = 0.45,
-        structural_weight: float = 0.25,
-        recency_weight: float = 0.15,
-        diversity_weight: float = 0.15,
-        taxonomy_bonus_weight: float = 0.08,
-        table_bonus_weight: float = 0.05
+        semantic_weight: float = 0.50,    # Peso de la relevancia del texto
+        structural_weight: float = 0.20,  # Peso de la jerarquía académica (Results > Abstract)
+        recency_weight: float = 0.15,     # Peso de la actualidad del paper
+        diversity_weight: float = 0.15    # Peso para variar fuentes bibliográficas
     ):
         self.embedder = embedder
         self.vector_store = vector_store
@@ -25,128 +28,37 @@ class HybridRetriever:
         self.recency_weight = recency_weight
         self.diversity_weight = diversity_weight
 
-        self.taxonomy_bonus_weight = taxonomy_bonus_weight
-        self.table_bonus_weight = table_bonus_weight
-
     # --------------------------------------------------
-    # Recency scoring (equilibrado, no dominante)
+    # Cálculo de Recencia No-Lineal (Prioridad a lo último)
     # --------------------------------------------------
     def _compute_recency_score(self, year: int) -> float:
-        if not year:
-            return 0.5
+        if not year or year == 0:
+            return 0.5 # Default para papers sin año detectado
 
         current_year = datetime.now().year
         age = current_year - year
 
-        if age <= 1:
-            return 1.0
-        elif age <= 3:
-            return 0.85
-        elif age <= 5:
-            return 0.7
-        elif age <= 8:
-            return 0.55
-        else:
-            return 0.4
+        if age <= 1: return 1.0     # 2025-2026 (Estado del arte)
+        elif age <= 3: return 0.85  # 2023-2024
+        elif age <= 5: return 0.65  # 2021-2022
+        elif age <= 8: return 0.45  # 2018-2020
+        else: return 0.30           # < 2018 (Contexto histórico)
 
     # --------------------------------------------------
-    # Structural scoring basado en sección
+    # Método Principal de Búsqueda (Híbrido)
     # --------------------------------------------------
-    def _compute_structural_score(self, section: str) -> float:
-
-        priority_sections = {
-            "Methodology": 1.0,
-            "Results": 0.9,
-            "Discussion": 0.85,
-            "Literature Review": 0.8,
-            "Introduction": 0.7,
-            "Conclusion": 0.75
-        }
-
-        return priority_sections.get(section, 0.6)
-
-    # --------------------------------------------------
-    # Diversidad simple (penaliza exceso del mismo doc)
-    # --------------------------------------------------
-    def _compute_diversity_scores(self, results):
-
-        doc_counts = {}
-        diversity_scores = []
-
-        for r in results:
-            doc_id = r["doc_id"]
-            doc_counts[doc_id] = doc_counts.get(doc_id, 0) + 1
-
-            if doc_counts[doc_id] == 1:
-                diversity_scores.append(1.0)
-            elif doc_counts[doc_id] == 2:
-                diversity_scores.append(0.8)
-            else:
-                diversity_scores.append(0.6)
-
-        return diversity_scores
-
-    # --------------------------------------------------
-    # Main retrieval
-    # --------------------------------------------------
-    def search(self, query_embedding, top_k=10):
-        raw_results = self.vector_store.query(
-            query_embedding=query_embedding,
-            n_results=top_k * 3
-        )
-
-        documents = raw_results["documents"][0]
-        metadatas = raw_results["metadatas"][0]
-        distances = raw_results["distances"][0]
-
-        results = []
-        for doc, metadata, distance in zip(documents, metadatas, distances):
-            semantic_score = 1 / (1 + distance)
-            structural_score = metadata.get("structural_weight", 1.0)
-            recency_score = metadata.get("recency_score", 1.0)
-            taxonomy_bonus = metadata.get("taxonomy_bonus", 0)
-            table_bonus = metadata.get("table_bonus", 0)
-
-            results.append({
-                "doc_id": metadata.get("doc_id"),
-                "title": metadata.get("title"),
-                "section": metadata.get("section"),
-                "year": metadata.get("year"),
-                "semantic_score": semantic_score,
-                "structural_score": structural_score,
-                "recency_score": recency_score,
-                "taxonomy_bonus": taxonomy_bonus,
-                "table_bonus": table_bonus,
-                "text": doc
-            })
-
-        # calcular diversidad y final_score como antes
-        diversity_scores = self._compute_diversity_scores(results)
-        for i, r in enumerate(results):
-            r["diversity_score"] = diversity_scores[i]
-            r["final_score"] = (
-                self.semantic_weight * r["semantic_score"] +
-                self.structural_weight * r["structural_score"] +
-                self.recency_weight * r["recency_score"] +
-                self.diversity_weight * r["diversity_score"] +
-                r["taxonomy_bonus"] +
-                r["table_bonus"]
-            )
-
-        # ordenar
-        ranked = sorted(results, key=lambda x: x["final_score"], reverse=True)
-        return ranked[:top_k]
-
-    def search2(self, query_text: str, n_results: int = 10, where_filter: dict = None):
+    def search2(self, query_text: str, n_results: int = 10, where_filter: dict = None) -> List[Dict]:
         """
-        Versión mejorada del buscador que aplica los bonos de estructura 
-        y taxonomía definidos en el Chunker.
+        Realiza una búsqueda semántica y aplica el re-ranking basado en 
+        metadatos académicos.
         """
+        # 1. Generar embedding de la consulta
         query_embedding = self.embedder.embed_text(query_text)
 
+        # 2. Query inicial a Chroma (pedimos más para filtrar después)
         raw_results = self.vector_store.query(
             query_embedding=query_embedding,
-            n_results=n_results * 2, # Buscamos más para luego re-rankear
+            n_results=n_results * 2,
             where_filter=where_filter
         )
 
@@ -154,89 +66,62 @@ class HybridRetriever:
         metadatas = raw_results["metadatas"][0]
         distances = raw_results["distances"][0]
 
-        ranked_results = []
+        scored_results = []
+        doc_counts = {} # Registro para diversidad
 
         for doc, metadata, distance in zip(documents, metadatas, distances):
-            # 1. Score Semántico (0-1)
+            # A. Score Semántico (Invertimos la distancia para que menor sea mejor)
             semantic_score = 1 / (1 + distance)
             
-            # 2. Score de Estructura (Bonos por tablas y taxonomías)
-            struct_score = 0.5 # base
-            if metadata.get("has_taxonomy_pattern"):
-                struct_score += self.taxonomy_bonus_weight
-            if metadata.get("has_structured_table"):
-                struct_score += self.table_bonus_weight
+            # B. Score Estructural (Priorizamos secciones clave)
+            # Recuperamos el structural_weight calculado en la ingesta
+            structural_score = metadata.get("structural_weight", 0.6)
             
-            # 3. Score de Recencia
-            year = metadata.get("year")
-            recency_score = self._compute_recency_score(year) if year else 0.5
+            # Bonus por patrones de Taxonomía o Tablas detectados por el Chunker
+            if metadata.get("has_taxonomy_pattern"):
+                structural_score += 0.15
+            if metadata.get("has_structured_table"):
+                structural_score += 0.10
+            
+            # C. Score de Recencia
+            year = metadata.get("year", 0)
+            recency_score = self._compute_recency_score(year)
 
-            # Cálculo Final usando los pesos de la clase
+            # D. Score de Diversidad (Penalizamos si traemos demasiados chunks del mismo paper)
+            doc_id = metadata.get("doc_id", "unknown")
+            doc_counts[doc_id] = doc_counts.get(doc_id, 0) + 1
+            
+            if doc_counts[doc_id] == 1:
+                diversity_score = 1.0
+            elif doc_counts[doc_id] == 2:
+                diversity_score = 0.7
+            else:
+                diversity_score = 0.4 # Penalización fuerte al tercer chunk del mismo doc
+
+            # --- CÁLCULO DEL FINAL SCORE PONDERADO ---
             final_score = (
                 self.semantic_weight * semantic_score +
-                self.structural_weight * struct_score +
-                self.recency_weight * recency_score
+                self.structural_weight * min(structural_score, 1.5) +
+                self.recency_weight * recency_score +
+                self.diversity_weight * diversity_score
             )
 
-            ranked_results.append({
+            scored_results.append({
                 "text": doc,
                 "metadata": metadata,
                 "final_score": final_score,
-                "semantic_score": semantic_score
+                "breakdown": {
+                    "semantic": round(semantic_score, 3),
+                    "structural": round(structural_score, 3),
+                    "recency": round(recency_score, 3),
+                    "diversity": round(diversity_score, 3)
+                }
             })
 
-        # Ordenar y devolver TOP K
-        ranked_results.sort(key=lambda x: x["final_score"], reverse=True)
-        return ranked_results[:n_results]   
+        # 3. Ordenar por el score final y recortar al Top K deseado
+        scored_results.sort(key=lambda x: x["final_score"], reverse=True)
+        return scored_results[:n_results]
 
-    def query(
-        self,
-        query_text: str,
-        n_results: int = 15,
-        where_filter: Dict[str, Any] = None,
-        recency_bias: bool = True
-    ) -> List[Dict]:
-        """
-        Método principal de retrieval.
-        Devuelve lista de chunks rankeados por final_score.
-        """
-        # 1️⃣ Generar embedding del query
-        query_embedding = self.embedder.embed_text(query_text)
-
-        # 2️⃣ Query semántico en Chroma
-        raw_results = self.vector_store.query(
-            query_embedding=query_embedding,
-            n_results=n_results,
-            where_filter=where_filter
-        )
-
-        # Chroma devuelve listas anidadas
-        documents = raw_results["documents"][0]
-        metadatas = raw_results["metadatas"][0]
-        distances = raw_results["distances"][0]
-
-        ranked_results = []
-
-        for doc, metadata, distance in zip(documents, metadatas, distances):
-            semantic_score = 1 / (1 + distance)
-            structural_weight = metadata.get("structural_weight", 1.0)
-            recency_weight = metadata.get("recency_score", 1.0)  # si lo tienes
-
-            final_score = (
-                0.7 * semantic_score +
-                0.2 * structural_weight +
-                0.1 * recency_weight
-            )
-
-            ranked_results.append({
-                "text": doc,
-                "metadata": metadata,
-                "semantic_score": semantic_score,
-                "structural_weight": structural_weight,
-                "recency_weight": recency_weight,
-                "final_score": final_score
-            })
-
-        # Ordenar por final_score
-        ranked_results.sort(key=lambda x: x["final_score"], reverse=True)
-        return ranked_results
+    def embed_query(self, text: str):
+        """Helper para obtener el embedding de una consulta"""
+        return self.embedder.embed_text(text)

@@ -1,121 +1,94 @@
 import re
+import unicodedata
 from typing import List, Dict
 
-
 class SectionSplitter:
-
     def __init__(self):
         self.section_keywords = {
             "abstract": "Abstract",
             "introduction": "Introduction",
-            "background": "Background",
             "literature review": "Literature Review",
+            "literature review": "Review of the Literature",
             "methodology": "Methodology",
-            "methods": "Methodology",
-            "materials and methods": "Methodology",
             "results": "Results",
-            "findings": "Results",
             "discussion": "Discussion",
             "conclusion": "Conclusion",
-            "conclusions": "Conclusion",
-            "future work": "Future Work",
-            "recommendations": "Recommendations",
-            "references": "References",
-            "bibliography": "References"
+            "references": "References"
         }
 
-    # --------------------------------------------------
-    # 🔹 Normalización robusta
-    # --------------------------------------------------
-    def _normalize(self, line: str) -> str:
-        line = line.replace("\xa0", " ")  # espacios raros PDF
-        line = line.strip()
+    def _clean_academic_text(self, text: str) -> str:
+        """
+        Limpia el texto de una sección antes de guardarlo.
+        """
+        # 1. Normalización Unicode
+        text = unicodedata.normalize("NFKC", text)
 
-        # eliminar numeración tipo:
-        # 1.
-        # 1.1
-        # I.
-        # IV-A
-        # 2)
-        line = re.sub(r"^(\d+(\.\d+)*|[ivxlcdm]+)([\.\-\)]\s*)?", "", line, flags=re.IGNORECASE)
+        # 2. Unir palabras cortadas (hyphenation)
+        text = re.sub(r"(\w+)-\n\s*(\w+)", r"\1\2", text)
 
-        # eliminar ":" final
-        line = line.rstrip(":").strip()
+        # 3. Convertir saltos de línea simples en espacios (preserva el flujo)
+        text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
 
-        return line.lower()
+        # 4. Eliminar caracteres no imprimibles
+        text = "".join(ch for ch in text if unicodedata.category(ch)[0] != "C")
 
-    # --------------------------------------------------
-    # 🔹 Detección segura de headers
-    # --------------------------------------------------
+        # 5. Colapsar espacios múltiples
+        text = re.sub(r"\s+", " ", text)
+
+        return text.strip()
+
+    def _is_garbage_line(self, line: str) -> bool:
+        l = line.strip()
+        patterns = [
+            r"^\d+\s+[A-Z].*?\bet al\b", 
+            r"Procedia Computer Science",
+            r"ScienceDirect",
+            r"Available online",
+            r"^\d+$",
+            r"©\s*20\d{2}"
+        ]
+        return any(re.search(p, l, re.IGNORECASE) for p in patterns)
+
     def _detect_header(self, line: str) -> str | None:
-        cleaned = self._normalize(line)
-
-        # líneas demasiado largas no son headers
-        if len(cleaned) == 0 or len(cleaned) > 100:
-            return None
-
-        # evitar detectar referencias individuales
-        if re.search(r"\[\d+\]", line):
-            return None
-
-        if re.search(r"\(\d{4}\)", line):
-            return None
-
-        # PRIORIDAD absoluta para references
-        if cleaned == "references":
-            return "References"
-
-        # match exacto primero
-        for keyword, canonical in self.section_keywords.items():
-            if cleaned == keyword:
+        raw = line.strip()
+        clean_line = re.sub(r"^(\d+\.?\d*|[ivxlcdm]+)\.?\s*", "", raw, flags=re.I).lower()
+        for kw, canonical in self.section_keywords.items():
+            if clean_line == kw:
                 return canonical
-
-        # match flexible (ej: findings & suggestions...)
-        for keyword, canonical in self.section_keywords.items():
-            if keyword in cleaned:
-                # solo permitir flexible si línea es corta
-                if len(cleaned.split()) <= 8:
-                    return canonical
-
         return None
 
-    # --------------------------------------------------
-    # 🔹 Split principal
-    # --------------------------------------------------
     def split(self, text: str) -> List[Dict]:
         lines = text.split("\n")
-        sections = []
-
+        sections_map = {}
         current_section = "Unknown"
-        buffer = []
-        in_references = False
-
-        def flush():
-            if buffer:
-                sections.append({
-                    "section": current_section,
-                    "text": "\n".join(buffer).strip()
-                })
-
+        
         for line in lines:
-
-            # 🔒 Si estamos en references → no detectar más headers
-            if in_references:
-                buffer.append(line)
+            if self._is_garbage_line(line):
                 continue
 
             header = self._detect_header(line)
-
             if header:
-                flush()
                 current_section = header
-                buffer = []
+                if current_section not in sections_map:
+                    sections_map[current_section] = []
+                continue
+            
+            if current_section not in sections_map:
+                sections_map[current_section] = []
+            
+            if line.strip():
+                sections_map[current_section].append(line)
 
-                if header == "References":
-                    in_references = True
-            else:
-                buffer.append(line)
-
-        flush()
-
-        return sections
+        final_sections = []
+        for name, content_list in sections_map.items():
+            raw_text = "\n".join(content_list)
+            # ✨ APLICAMOS LA LIMPIEZA AQUÍ
+            clean_text = self._clean_academic_text(raw_text)
+            
+            if name != "Unknown" and len(clean_text) > 30:
+                final_sections.append({
+                    "section": name,
+                    "text": clean_text
+                })
+        
+        return final_sections

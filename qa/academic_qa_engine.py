@@ -24,14 +24,13 @@ class AcademicQAEngine:
     # =====================================================
 
     def ask(self, question: str, top_k: int = 10) -> Dict:
-
-        # 1️⃣ Retrieval híbrido
-        retrieved = self.retriever.query(
+        # 1️⃣ Cambio clave: Usar el método search optimizado
+        retrieved = self.retriever.search2(
             query_text=question,
             n_results=top_k
         )
 
-        # 2️⃣ Seleccionar mejores chunks finales
+        # 2️⃣ Seleccionar mejores chunks (ya vienen ordenados por final_score)
         selected_chunks = retrieved[:6]
 
         # 3️⃣ Construir contexto
@@ -49,8 +48,8 @@ class AcademicQAEngine:
             "sources": [
                 {
                     "doc_id": c["metadata"]["doc_id"],
-                    "section": c["metadata"]["section"],
-                    "score": c["final_score"]
+                    "section": c["metadata"].get("section", "General"), # Fallback a General
+                    "score": round(c["final_score"], 4)
                 }
                 for c in selected_chunks
             ]
