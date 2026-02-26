@@ -1,0 +1,74 @@
+[
+    {
+        "pillar": "Technical",
+        "question_es": "Se requiere implementar una solución de autenticación en capas para la protección de datos sensibles?",
+        "is_critical": false,
+        "weight": 12
+    },
+    {
+        "pillar": "Technical",
+        "question_es": "¿Se requiere implementar una arquitectura de escalabilidad para garantizar la creciente demanda del sistema?",
+        "is_critical": false,
+        "weight": 12
+    },
+    {
+        "pillar": "Technical",
+        "question_es": "¿Se requiere implementar un mecanismo de autenticación a través de una red privada virtual (VPN) para la comunicación remota con el sistema?",
+        "is_critical": false,
+        "weight": 10
+    },
+    {
+        "pillar": "Organizational",
+        "question_es": "¿Se requiere la implementación de un mecanismo de acceso controlado para garantizar la autenticidad y la integridad de los datos en el sistema?",
+        "is_critical": false,
+        "weight": 12
+    },
+    {
+        "pillar": "Organizational",
+        "question_es": "¿Tiene un proceso de revisión y aprobación regular para la implementación de nuevos requisitos técnicos?",
+        "is_critical": false,
+        "weight": 12
+    },
+    {
+        "pillar": "Organizational",
+        "question_es": "¿Se han establecido procedimientos de reversibilidad para la migración de activos a una red blockchain nueva?",
+        "is_critical": false,
+        "weight": 10
+    },
+    {
+        "pillar": "Environmental/Strategic",
+        "question_es": "¿Se requiere la implementación de un sistema de seguimiento y evaluación para medir el impacto ambiental del proyecto?",
+        "is_critical": false,
+        "weight": 10
+    },
+    {
+        "pillar": "Environmental/Strategic",
+        "question_es": "¿El sistema de gestión de permisos y autenticación utiliza un mecanismo de cifrado de datos en transmisión?",
+        "is_critical": false,
+        "weight": 10
+    },
+    {
+        "pillar": "Environmental/Strategic",
+        "question_es": "¿Se requiere la implementación de un sistema de monitoreo y seguimiento en tiempo real para el manejo de recursos energéticos?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Governance/Legal",
+        "question_es": "¿Se ha implementado un mecanismo de retroalimentación y control para garantizar la transparencia en las decisiones de implementación de cambios legales y regulatorios en el proyecto?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Governance/Legal",
+        "question_es": "¿Se han implementado protocolos de auditoría blockchain para garantizar la transparencia y el cumplimiento en la cadena de suministro?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Governance/Legal",
+        "question_es": "¿Se ha implementado un mecanismo de reversibilidad para las decisiones ejecutivas en la cadena de bloques?",
+        "is_critical": false,
+        "weight": 12
+    }
+]

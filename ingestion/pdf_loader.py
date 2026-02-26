@@ -5,53 +5,6 @@ import hashlib
 import pdfplumber
 import re
 
-def extract_clean_text2(pdf_path: str) -> str:
-    """
-    Extrae el texto ignorando las franjas laterales de metadatos 
-    y manejando las columnas de forma secuencial.
-    """
-    final_content = []
-    seen_paragraphs = set()
-
-    with pdfplumber.open(pdf_path) as pdf:
-        for page in pdf.pages:
-            width = float(page.width)
-            height = float(page.height)
-
-            # 1. Definimos las cajas para ignorar el ruido lateral 
-            # MDPI suele tener los metadatos en el primer 20-25% de la izquierda en la pag 1
-            # Pero el texto principal en el resto de las paginas es doble columna.
-            
-            # Margen de seguridad para saltar "Academic Editor", "Revised", etc.
-            # Recortamos un 25% de la izquierda para la primera página o donde haya ruido
-            
-            left_col_bbox = (width * 0.05, height * 0.1, width * 0.49, height * 0.9)
-            right_col_bbox = (width * 0.51, height * 0.1, width * 0.95, height * 0.9)
-
-            # Extraemos por columnas
-            left_text = page.within_bbox(left_col_bbox).extract_text()
-            right_text = page.within_bbox(right_col_bbox).extract_text()
-            
-            combined_page = f"{left_text if left_text else ''}\n{right_text if right_text else ''}"
-
-            # 2. Limpieza de líneas
-            if combined_page.strip():
-                lines = combined_page.split('\n')
-                for line in lines:
-                    # Filtro de seguridad para palabras pegadas o metadatos
-                    if re.search(r"(AcademicEditor|Revised:|Accepted:|Published:)", line.replace(" ", "")):
-                        continue
-                    
-                    clean_l = line.strip()
-                    if len(clean_l) < 3: continue
-
-                    # Deduplicación por hash para evitar el efecto "eco"
-                    line_hash = hashlib.md5(clean_l.encode()).hexdigest()
-                    if line_hash not in seen_paragraphs:
-                        final_content.append(clean_l)
-                        seen_paragraphs.add(line_hash)
-
-    return "\n".join(final_content)
 
 def extract_clean_text(pdf_path: str) -> str:
     """

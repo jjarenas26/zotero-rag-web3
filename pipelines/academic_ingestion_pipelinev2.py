@@ -10,10 +10,11 @@ from ingestion.academic_chunker import AcademicChunker
 from embedding.ollama_embedder import OllamaEmbedder
 from vectorstore.chroma_vector_store import ChromaVectorStore
 from ingestion.pdf_loader import extract_clean_text
+from ingestion.academic_extractor import AcademicIntelligenceExtractor
 
 
 
-class AcademicIngestionPipelineV2:
+class AcademicIngestionPipeline:
     """
     Orquestador principal del sistema de investigación estructurada.
     Coordina extracción, chunking, embedding y almacenamiento.
@@ -27,6 +28,7 @@ class AcademicIngestionPipelineV2:
         self.section_splitter = SectionSplitter()
         self.chunker = AcademicChunker()
         self.embedder = OllamaEmbedder()
+        self.intel_extractor = AcademicIntelligenceExtractor()
         self.vector_store = ChromaVectorStore(
             collection_name=collection_name,
             persist_directory=persist_directory
@@ -39,49 +41,57 @@ class AcademicIngestionPipelineV2:
         print(f"🧐 Ingesting: {os.path.basename(pdf_path)}")
         
         try:
-            # 1. Carga y preparación de Metadata
             metadata = self._load_metadata(metadata_path)
             metadata = self._prepare_metadata(metadata)
-
-            # 2. Extracción y Limpieza Profunda
             raw_text = extract_clean_text(pdf_path)
             
-            #clean_text = self._clean_academic_text(raw_text) # ✨ Limpieza de encoding/garbage
-            #print(clean_text[:3000])
-            # 3. Segmentación Estructural (SectionSplitter optimizado)
-            
+            # 1. Segmentación Estructural inicial
             sections = self.section_splitter.split(raw_text)
-            #print(len(sections))
-            
-            # 4. Chunking con Smart Overlap (AcademicChunker optimizado)
-            chunks = self.chunker.chunk_sections(sections, metadata)
 
-            if not chunks:
-                print(f"⚠️ No chunks generated for {pdf_path}")
-                return
+            final_texts = []
+            final_metadatas = []
+            final_ids = []
 
-            texts = []
-            metadatas = []
-            vector_ids = []
+            # 2. Procesamiento Inteligente SECCIÓN POR SECCIÓN
+            for section in sections:
+                name = section["section"]
+                content = section["text"]
+                print(f"   🧠 Processingfrom {name}...")
 
-            for i, chunk in enumerate(chunks):
-                texts.append(chunk["text"])
-                metadatas.append(self._build_vector_metadata(chunk))
-                # IDs deterministas para evitar duplicados al re-ingestar
-                vector_ids.append(f"{metadata['doc_id']}_ch{i}")
+                # A. Refinamiento con Llama 3.1 (Limpia ruidos de PDF y une palabras)
+                #clean_text = self.refiner.refine_section(name, content)
+                clean_text=content
 
-            # 5. Generación de Embeddings
-            embeddings = self.embedder.embed_batch(texts)
+                # B. Extracción de Inteligencia (Solo secciones clave para optimizar)
+                intel_data = {}
+                if name.lower() in ["introduction", "methodology", "results", "discussion", "conclusion"]:
+                    print(f"   🧠 Extracting intelligence from {name}...")
+                    intel_data = self.intel_extractor.extract_intelligence(name, clean_text)
 
-            # 6. Almacenamiento en ChromaDB
-            self.vector_store.add_documents(
-                ids=vector_ids,
-                texts=texts,
-                embeddings=embeddings,
-                metadatas=metadatas
-            )
+                # C. Chunking de la sección limpia
+                # Pasamos la inteligencia detectada para que se adjunte a los chunks
+                section_chunks = self.chunker.chunk_single_section(
+                    section_name=name, 
+                    text=clean_text, 
+                    doc_metadata=metadata,
+                    intel_data=intel_data # Pasamos TRL, Contradicciones, etc.
+                )
 
-            print(f"✅ Ingested {len(chunks)} chunks from {metadata.get('doc_id')}")
+                for i, chunk in enumerate(section_chunks):
+                    final_texts.append(chunk["text"])
+                    final_metadatas.append(self._build_vector_metadata(chunk))
+                    final_ids.append(f"{metadata['doc_id']}_{name}_ch{i}")
+
+            # 3. Generación de Embeddings y Guardado
+            if final_texts:
+                embeddings = self.embedder.embed_batch(final_texts)
+                self.vector_store.add_documents(
+                    ids=final_ids,
+                    texts=final_texts,
+                    embeddings=embeddings,
+                    metadatas=final_metadatas
+                )
+                print(f"✅ Ingested {len(final_texts)} intelligent chunks from {metadata.get('doc_id')}")
             
         except Exception as e:
             print(f"❌ Error ingesting {pdf_path}: {str(e)}")
@@ -159,31 +169,27 @@ class AcademicIngestionPipelineV2:
 
     def _build_vector_metadata(self, chunk: Dict) -> Dict:
         """
-        Construye metadata limpia para Chroma.
-        Solo campos necesarios para filtrado y boost.
+        Construye la metadata enriquecida para ChromaDB.
         """
-
         structural_weight = self._compute_structural_weight(chunk["section"])
+        intel = chunk.get("intel_data", {})
 
         metadata = {
             "doc_id": chunk.get("doc_id", ""),
             "title": chunk.get("title", ""),
             "authors": chunk.get("authors", ""),
             "year": chunk.get("year", 0),
-            "journal": chunk.get("journal", ""),
-            "doi": chunk.get("doi", ""),
-            "collection": chunk.get("collection", ""),
-            "research_question": chunk.get("research_question", ""),
             "section": chunk.get("section", ""),
-            "chunk_id": chunk.get("chunk_id", ""),
             "structural_weight": structural_weight,
-
-            # 🔬 NUEVO: taxonomy mode metadata
-            "has_taxonomy_pattern": bool(chunk.get("has_taxonomy_pattern", False)),
-            "has_structured_table": bool(chunk.get("has_structured_table", False))
+            
+            # 🚀 METADATA ESTRATÉGICA (Inyectada desde el Extractor)
+            "trl": intel.get("trl_analysis", {}).get("level", 0),
+            "trl_justification": intel.get("trl_analysis", {}).get("justification", ""),
+            "contradictions": "|".join(intel.get("contradictions", [])) if intel.get("contradictions") else "",
+            "entities": str(intel.get("entities", []))
         }
 
-        # 🔒 Blindaje final contra None
+        # Blindaje contra None
         for k, v in metadata.items():
             if v is None:
                 metadata[k] = "" if k != "year" else 0

@@ -121,7 +121,100 @@ class HybridRetriever:
         # 3. Ordenar por el score final y recortar al Top K deseado
         scored_results.sort(key=lambda x: x["final_score"], reverse=True)
         return scored_results[:n_results]
+   
+    # --------------------------------------------------
+    # Método Principal de Búsqueda (Híbrido) tiene metadat de investigacion TRL, contradicciones y entidades
+    # --------------------------------------------------
+    def search3(self, query_text: str, n_results: int = 10, where_filter: dict = None) -> List[Dict]:
+        """
+        Realiza una búsqueda semántica y aplica el re-ranking basado en 
+        metadatos académicos e inteligencia estratégica (TRL, Contradicciones).
+        """
+        # 1. Generar embedding de la consulta
+        query_embedding = self.embedder.embed_text(query_text)
 
+        # 2. Query inicial a Chroma
+        # Pedimos n_results * 3 para tener margen de maniobra con el re-ranking de diversidad
+        raw_results = self.vector_store.query(
+            query_embedding=query_embedding,
+            n_results=n_results * 3,
+            where_filter=where_filter
+        )
+
+        # Validación de seguridad si no hay resultados
+        if not raw_results or not raw_results["documents"]:
+            return []
+
+        documents = raw_results["documents"][0]
+        metadatas = raw_results["metadatas"][0]
+        distances = raw_results["distances"][0]
+
+        scored_results = []
+        doc_counts = {} 
+
+        for doc, metadata, distance in zip(documents, metadatas, distances):
+            # A. Score Semántico (Similitud del vector)
+            semantic_score = 1 / (1 + distance)
+            
+            # B. Score Estructural (Prioridad de secciones)
+            structural_score = float(metadata.get("structural_weight", 0.6))
+            
+            # Bonus por patrones de Taxonomía o Tablas
+            if metadata.get("has_taxonomy_pattern"):
+                structural_score += 0.15
+            if metadata.get("has_structured_table"):
+                structural_score += 0.10
+            
+            # C. Score de Recencia (Usa el año del paper)
+            year = metadata.get("year", 0)
+            recency_score = self._compute_recency_score(year)
+
+            # D. Score de Diversidad 
+            doc_id = metadata.get("doc_id", "unknown")
+            doc_counts[doc_id] = doc_counts.get(doc_id, 0) + 1
+            
+            if doc_counts[doc_id] == 1:
+                diversity_score = 1.0
+            elif doc_counts[doc_id] == 2:
+                diversity_score = 0.6
+            else:
+                diversity_score = 0.3 
+
+            # --- CÁLCULO DEL FINAL SCORE PONDERADO ---
+            # Asegúrate de que los atributos (self.semantic_weight, etc) existan en el __init__
+            final_score = (
+                self.semantic_weight * semantic_score +
+                self.structural_weight * min(structural_score, 1.5) +
+                self.recency_weight * recency_score +
+                self.diversity_weight * diversity_score
+            )
+
+            # E. Inyección de Metadata Estratégica
+            # Aquí nos aseguramos de que los campos que el Dashboard necesita estén presentes
+            enriched_metadata = {
+                **metadata,
+                "trl": metadata.get("trl", 0),
+                "trl_justification": metadata.get("trl_justification", "No analizado"),
+                "contradictions": metadata.get("contradictions", ""),
+                "entities": metadata.get("entities", "[]")
+            }
+
+            scored_results.append({
+                "text": doc,
+                "metadata": enriched_metadata,
+                "final_score": round(final_score, 4),
+                "breakdown": {
+                    "semantic": round(semantic_score, 3),
+                    "structural": round(structural_score, 3),
+                    "recency": round(recency_score, 3),
+                    "diversity": round(diversity_score, 3)
+                }
+            })
+
+        # 3. Re-ordenar por el score ponderado y recortar
+        scored_results.sort(key=lambda x: x["final_score"], reverse=True)
+        return scored_results[:n_results]
+    
     def embed_query(self, text: str):
         """Helper para obtener el embedding de una consulta"""
         return self.embedder.embed_text(text)

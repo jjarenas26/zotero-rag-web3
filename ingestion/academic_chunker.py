@@ -1,5 +1,6 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 import re
+
 
 class AcademicChunker:
     """
@@ -117,6 +118,92 @@ class AcademicChunker:
                 chunk_global_id += 1
 
         return chunks
+
+    def chunk_single_section(
+        self, 
+        section_name: str, 
+        text: str, 
+        doc_metadata: Dict, 
+        intel_data: Optional[Dict] = None
+    ) -> List[Dict]:
+        """
+        Divide una sección limpia en chunks inyectando la inteligencia estratégica.
+        """
+        if not text.strip() or section_name == "References":
+            return []
+
+        chunks = []
+        chunk_size = self.SECTION_SIZES.get(section_name, self.default_chunk_size)
+        paragraphs = self._split_paragraphs(text)
+
+        current_chunk = ""
+        current_tokens = 0
+        chunk_id = 0
+
+        for paragraph in paragraphs:
+            p_tokens = self._estimate_tokens(paragraph)
+            units = self._split_sentences(paragraph) if p_tokens > chunk_size else [paragraph]
+
+            for unit in units:
+                taxonomy_detected = self._contains_taxonomy_trigger(unit)
+                dynamic_limit = max(chunk_size, 1000) if taxonomy_detected else chunk_size
+                u_tokens = self._estimate_tokens(unit)
+
+                if current_tokens + u_tokens <= dynamic_limit:
+                    current_chunk += " " + unit
+                    current_tokens += u_tokens
+                else:
+                    if current_tokens >= self.min_chunk_size:
+                        chunks.append(
+                            self._build_chunkv2(section_name, current_chunk.strip(), doc_metadata, chunk_id, intel_data)
+                        )
+                        chunk_id += 1
+
+                    # Smart Overlap
+                    sentences = self._split_sentences(current_chunk)
+                    overlap_text = sentences[-1] if len(sentences) >= 1 else current_chunk[-150:]
+                    current_chunk = overlap_text + " " + unit
+                    current_tokens = self._estimate_tokens(current_chunk)
+
+        # Último chunk
+        if current_chunk.strip() and current_tokens >= self.min_chunk_size:
+            chunks.append(
+                self._build_chunkv2(section_name, current_chunk.strip(), doc_metadata, chunk_id, intel_data)
+            )
+
+        return chunks
+
+    def _build_chunkv2(
+        self, 
+        section_name: str, 
+        text: str, 
+        metadata: Dict, 
+        chunk_id: int, 
+        intel_data: Optional[Dict] = None
+    ) -> Dict:
+        """
+        Construye el objeto chunk inyectando metadatos de Zotero e Inteligencia de Llama.
+        """
+        has_taxonomy = self._contains_taxonomy_trigger(text)
+        has_table = self._contains_structured_table(text)
+        
+        context_header = f"[Source: {metadata.get('title', 'N/A')} | Section: {section_name}]\n"
+        enriched_text = context_header + text
+
+        return {
+            "id": f"{metadata['doc_id']}_{section_name}_{chunk_id}",
+            "doc_id": metadata["doc_id"],
+            "title": metadata.get("title"),
+            "authors": metadata.get("authors"),
+            "year": metadata.get("year", 0),
+            "section": section_name,
+            "chunk_id": chunk_id,
+            "text": enriched_text,
+            "has_taxonomy_pattern": has_taxonomy,
+            "has_structured_table": has_table,
+            # 🚀 INYECCIÓN DE INTELIGENCIA
+            "intel_data": intel_data if intel_data else {}
+        }
 
     def _build_chunk(self, section_name: str, text: str, metadata: Dict, chunk_id: int) -> Dict:
         has_taxonomy = self._contains_taxonomy_trigger(text)

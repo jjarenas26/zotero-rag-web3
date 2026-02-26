@@ -1,73 +1,121 @@
 [
     {
         "pillar": "Technical",
-        "question_es": "Se requiere implementar una solución de autenticación en capas para la protección de datos sensibles?",
+        "question_es": "Se requiere la implementación de una solución de autenticación basada en biometría para garantizar la seguridad del sistema?",
         "is_critical": false,
-        "weight": 12
+        "weight": 10
     },
     {
         "pillar": "Technical",
-        "question_es": "¿Se requiere implementar una arquitectura de escalabilidad para garantizar la creciente demanda del sistema?",
-        "is_critical": false,
-        "weight": 12
+        "question_es": "¿El sistema debe implementar un mecanismo de autenticación distribuida para garantizar la seguridad en caso de fallo de un componente?",
+        "is_critical": true,
+        "weight": 15
     },
     {
         "pillar": "Technical",
-        "question_es": "¿Se requiere implementar un mecanismo de autenticación a través de una red privada virtual (VPN) para la comunicación remota con el sistema?",
+        "question_es": "¿Se requiere la implementación de un mecanismo de recuperación automática para evitar la pérdida de datos en caso de falla del sistema?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Technical",
+        "question_es": "¿El proyecto requiere la implementación de un mecanismo de compensación para asegurar transacciones inter-bloques?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Technical",
+        "question_es": "¿Se requiere implementar un mecanismo de 'Proof of Stake' para la red?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Organizational",
+        "question_es": "Se contempla la implementación de un sistema de gobernanza descentralizada para el manejo de activos digitales?",
         "is_critical": false,
         "weight": 10
     },
     {
         "pillar": "Organizational",
-        "question_es": "¿Se requiere la implementación de un mecanismo de acceso controlado para garantizar la autenticidad y la integridad de los datos en el sistema?",
+        "question_es": "¿Se han implementado procesos de monitorización y evaluación continuas para garantizar la seguridad y el rendimiento de los sistemas blockchain?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Organizational",
+        "question_es": "¿Se han establecido procedimientos de revisión y actualización periódicos para la infraestructura blockchain?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Organizational",
+        "question_es": "¿El plan de emergencia y continuidad del negocio incluye procedimientos para gestionar la integridad de datos en caso de falla o ciberataque?",
+        "is_critical": true,
+        "weight": 15
+    },
+    {
+        "pillar": "Organizational",
+        "question_es": "¿Se establecen procedimientos de escalada de incidentes para garantizar la continuidad del servicio en caso de un desastre?",
+        "is_critical": false,
+        "weight": 10
+    },
+    {
+        "pillar": "Environmental/Strategic",
+        "question_es": "Se requiere implementar un sistema de seguimiento y monitoreo del impacto ambiental en la cadena de suministro?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Environmental/Strategic",
+        "question_es": "¿Es necesario implementar un sistema de seguimiento del carbono footprint para la cadena de suministro?",
+        "is_critical": false,
+        "weight": 10
+    },
+    {
+        "pillar": "Environmental/Strategic",
+        "question_es": "¿Se requiere la implementación de un sistema de gestión de residuos electrónicos en la organización?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Environmental/Strategic",
+        "question_es": "¿Se requiere la implementación de un sistema de seguimiento de emisiones de carbono en tiempo real para reducir el impacto ambiental de la empresa?",
+        "is_critical": false,
+        "weight": 10
+    },
+    {
+        "pillar": "Environmental/Strategic",
+        "question_es": "¿Se considera la implementación de un sistema de seguimiento y evaluación de impacto ambiental en nuestras operaciones?",
+        "is_critical": false,
+        "weight": 10
+    },
+    {
+        "pillar": "Governance/Legal",
+        "question_es": "¿Están implementados mecanismos de auditoría y seguimiento para garantizar la transparencia en las decisiones ejecutivas?",
         "is_critical": false,
         "weight": 12
     },
     {
-        "pillar": "Organizational",
-        "question_es": "¿Tiene un proceso de revisión y aprobación regular para la implementación de nuevos requisitos técnicos?",
+        "pillar": "Governance/Legal",
+        "question_es": "¿El contrato del proyecto blockchain contempla la posibilidad de cambios en las condiciones contractuales sin afectar la integridad y seguridad del sistema?",
+        "is_critical": false,
+        "weight": 8
+    },
+    {
+        "pillar": "Governance/Legal",
+        "question_es": "¿Se ha incorporado un proceso de revisión y actualización periódica de la política de cumplimiento regulatorio para garantizar su adecuación a las normas cambiantes?",
+        "is_critical": true,
+        "weight": 15
+    },
+    {
+        "pillar": "Governance/Legal",
+        "question_es": "¿Se han establecido procedimientos claros para la notificación de cambios en las políticas regulatorias que puedan afectar al proyecto blockchain?",
         "is_critical": false,
         "weight": 12
     },
     {
-        "pillar": "Organizational",
-        "question_es": "¿Se han establecido procedimientos de reversibilidad para la migración de activos a una red blockchain nueva?",
-        "is_critical": false,
-        "weight": 10
-    },
-    {
-        "pillar": "Environmental/Strategic",
-        "question_es": "¿Se requiere la implementación de un sistema de seguimiento y evaluación para medir el impacto ambiental del proyecto?",
-        "is_critical": false,
-        "weight": 10
-    },
-    {
-        "pillar": "Environmental/Strategic",
-        "question_es": "¿El sistema de gestión de permisos y autenticación utiliza un mecanismo de cifrado de datos en transmisión?",
-        "is_critical": false,
-        "weight": 10
-    },
-    {
-        "pillar": "Environmental/Strategic",
-        "question_es": "¿Se requiere la implementación de un sistema de monitoreo y seguimiento en tiempo real para el manejo de recursos energéticos?",
-        "is_critical": false,
-        "weight": 8
-    },
-    {
         "pillar": "Governance/Legal",
-        "question_es": "¿Se ha implementado un mecanismo de retroalimentación y control para garantizar la transparencia en las decisiones de implementación de cambios legales y regulatorios en el proyecto?",
-        "is_critical": false,
-        "weight": 8
-    },
-    {
-        "pillar": "Governance/Legal",
-        "question_es": "¿Se han implementado protocolos de auditoría blockchain para garantizar la transparencia y el cumplimiento en la cadena de suministro?",
-        "is_critical": false,
-        "weight": 8
-    },
-    {
-        "pillar": "Governance/Legal",
-        "question_es": "¿Se ha implementado un mecanismo de reversibilidad para las decisiones ejecutivas en la cadena de bloques?",
+        "question_es": "¿Se ha implementado un procedimiento de auditoría interna para evaluar la efectividad del sistema de gobierno y cumplimiento legal?",
         "is_critical": false,
         "weight": 12
     }

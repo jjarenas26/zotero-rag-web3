@@ -217,4 +217,4 @@ __marimo__/
 
 # data
 data/raw/
-chroma_db/
+chroma_db*/

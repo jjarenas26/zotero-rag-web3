@@ -10,6 +10,7 @@ FRAMEWORK_FILE = "FRAMEWORK_FINAL_BLOCKCHAIN.md"
 QUESTIONS_FILE = "assessment_questions.json"
 OLLAMA_MODEL = "llama3.1"
 PILLARS = ["Technical", "Organizational", "Environmental/Strategic", "Governance/Legal"]
+QUESTION = 5
 
 def extract_section(content, pillar):
     pattern = rf"(?i)##.*?(?:Pilar|Pillar)?\s*?:?\s*?{re.escape(pillar)}.*?\n(.*?)(?=\n##|\n---|\Z)"
@@ -36,8 +37,8 @@ def generate_questions_pro():
         # Memoria temporal para evitar repeticiones en el mismo pilar
         topics_covered = []
 
-        for i in range(1, 4):
-            print(f"   -> Redactando pregunta {i}/3 para {pillar}...")
+        for i in range(1, QUESTION+1):
+            print(f"   -> Redactando pregunta {i}/{QUESTION} para {pillar}...")
             
             # Prompt mejorado con instrucción de NO REPETICIÓN
             avoid_instruction = f"Avoid these topics already covered: {', '.join(topics_covered)}" if topics_covered else ""
