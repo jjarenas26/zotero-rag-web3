@@ -31,7 +31,7 @@ def generar_investigacion_final(retriever, queries):
     evidencia_detallada = [] # Para el CSV
     
     for dimension, query in queries.items():
-        resultados_k = retriever.search2(query, n_results=5)
+        resultados_k = retriever.search3(query, n_results=5)
         
         if resultados_k:
             avg, std = analizar_dimension_completa(resultados_k)
