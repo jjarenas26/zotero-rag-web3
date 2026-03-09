@@ -30,6 +30,50 @@ def init_retriever():
 
 retriever = init_retriever()
 
+# --- FUNCIONES DE INTELIGENCIA ESTRATÉGICA ---
+
+def display_intel_card(m):
+    """Muestra la metadata de TRL y contradicciones de forma visual."""
+    trl = m.get('trl', 0)
+    color = "green" if trl >= 7 else "orange" if trl >= 4 else "red"
+    
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        st.markdown(f"<h3 style='color:{color};'>TRL {trl}</h3>", unsafe_allow_html=True)
+        st.caption(f"_{m.get('trl_justification', 'Sin justificación')}_")
+    with col2:
+        st.markdown("**⚠️ Contradicciones/Riesgos:**")
+        cons = m.get('contradictions', "").split('|')
+        for c in cons:
+            if c: st.markdown(f"- <span style='font-size:0.85rem;'>{c}</span>", unsafe_allow_html=True)
+
+def get_dynamic_tradeoffs(pilar):
+    """Genera preguntas de compromiso basadas en la literatura real."""
+    query = f"technical trade-offs and limitations in blockchain {pilar}"
+    docs = retriever.search3(query_text=query, n_results=3)
+    
+    context = ""
+    for d in docs:
+        context += f"Evidence: {d['metadata'].get('contradictions')} (TRL {d['metadata'].get('trl')})\n"
+
+    prompt = f"""
+    [ROLE: SENIOR AUDITOR]
+    Based on this evidence for {pilar}:
+    {context}
+    
+    Generate 2 strategic questions for a CIO (Scale 1-5).
+    Return ONLY a JSON list:
+    [
+      {{"question": "...", "low": "...", "high": "...", "evidence": "..."}}
+    ]
+    """
+    try:
+        res = requests.post("http://localhost:11434/api/generate", 
+                            json={"model": "llama3.1", "prompt": prompt, "stream": False, "format": "json"})
+        return json.loads(res.json()['response'])
+    except:
+        return []
+
 # --- FUNCIONES DE UTILIDAD ---
 def load_questions(file_path):
     if not os.path.exists(file_path): return None
@@ -108,7 +152,7 @@ else:
         for pilar in stats.keys():
             with st.expander(f"📖 Referencias Bibliográficas para: {pilar}"):
                 if retriever:
-                    docs = retriever.search2(query_text=f"critical requirements for blockchain {pilar}", n_results=2)
+                    docs = retriever.search3(query_text=f"critical requirements for blockchain {pilar}", n_results=2)
                     for d in docs:
                         m = d['metadata']
                         st.markdown(f"**Cita:** {m.get('author', 'N.N.')} ({m.get('year', 's.f.')}). *{m.get('title')}*.")
@@ -130,7 +174,7 @@ if prompt := st.chat_input("Pregunta sobre un paper específico o criterio técn
 
     with st.spinner("Consultando biblioteca de Zotero..."):
         if retriever:
-            context_docs = retriever.search2(query_text=prompt, n_results=3)
+            context_docs = retriever.search3(query_text=prompt, n_results=3)
             context = ""
             for d in context_docs:
                 m = d['metadata']

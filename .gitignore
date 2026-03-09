@@ -218,3 +218,5 @@ __marimo__/
 # data
 data/raw/
 chroma_db*/
+
+.DS_Store
